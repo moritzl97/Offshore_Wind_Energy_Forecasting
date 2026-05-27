@@ -1,0 +1,11 @@
+﻿Variables Description,
+Time,Readings timestamp
+Temp_2m,Temperature at 2 mtrs above surface
+RelHum_2m,Relative Humidity at 2 mtrs above surface
+DP_2m,Dew Point at 3 mtrs above surface
+WS_10m,Wind Speed at 10 mtrs above surface
+WS_100m,Wind Speed at 100 mtrs above surface
+WD_10m,Wind Direction at 10 mtrs above surface
+WD_100m,Wind Direction at 100 mtrs above surface
+WG_10m,Wind Gusts at 100 mtrs above surface
+Power,"Turbine power generation, normalized between 0 and 1"
