@@ -64,6 +64,30 @@
       "turbine_type": "SG 11.0-200 DD",
       "platform_height": 125.5,
       "wind_height_scaling_factor": ""
+    },
+    {
+      "id": "6",
+      "name": "Windfarm Princess Amalia",
+      "installed_capacity_mw": 120,
+      "commissioned": "01/07/2021"
+    },
+    {
+      "id": "7",
+      "name": "Westermeerwind",
+      "installed_capacity_mw": 144,
+      "commissioned": "01/11/2015"
+    },
+    {
+      "id": "8",
+      "name": "Windfarm Luchterduinen",
+      "installed_capacity_mw": 129,
+      "commissioned": "01/07/2021"
+    },
+    {
+      "id": "9",
+      "name": "OWEZ",
+      "installed_capacity_mw": 108,
+      "commissioned": "10/12/2014"
     }
   ]
 }
