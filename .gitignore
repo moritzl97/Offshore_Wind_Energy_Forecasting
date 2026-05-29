@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+datasets/offshore_all_farms.csv
+datasets/wins50_nl_power_long.csv
