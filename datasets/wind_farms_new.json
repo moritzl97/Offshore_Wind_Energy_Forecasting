@@ -1,0 +1,81 @@
+{
+  "wind_farms": [
+    {
+      "id": "1",
+      "name": "Borssele_12",
+      "installed_capacity_mw": 752,
+      "location": {
+        "lat": 51.75,
+        "lon": 3.25
+      },
+      "commissioned": "27/11/2020",
+      "turbine_type": "SG 8.0-167 DD",
+      "platform_height": 116.5,
+      "wind_height_scaling_factor": ""
+    },
+    {
+      "id": "2",
+      "name": "Borssele_34",
+      "installed_capacity_mw": 731.5,
+      "location": {
+        "lat": 51.72,
+        "lon": 3.22
+      },
+      "commissioned": "06/01/2021",
+      "turbine_type": "V164-9.5",
+      "platform_height": 100,
+      "wind_height_scaling_factor": ""
+    },
+    {
+      "id": "3",
+      "name": "Gemini",
+      "installed_capacity_mw": 600,
+      "location": {
+        "lat": 54.03,
+        "lon": 5.95
+      },
+      "commissioned": "08/05/2017",
+      "turbine_type": "SWT-4.0-130",
+      "platform_height": 120,
+      "wind_height_scaling_factor": ""
+    },
+    {
+      "id": "4",
+      "name": "Hollandse_Kust_Zuid",
+      "installed_capacity_mw": 1420,
+      "location": {
+        "lat": 52.35,
+        "lon": 4.25
+      },
+      "commissioned": "29/09/2023",
+      "turbine_type": "SG 11.0-200 DD",
+      "platform_height": 125.5,
+      "wind_height_scaling_factor": ""
+    },
+    {
+      "id": "5",
+      "name": "Hollandse_Kust_Noord",
+      "installed_capacity_mw": 760,
+      "location": {
+        "lat": 52.75,
+        "lon": 4.5
+      },
+      "commissioned": "20/12/2023",
+      "turbine_type": "SG 11.0-200 DD",
+      "platform_height": 125.5,
+      "wind_height_scaling_factor": ""
+    },
+    {
+      "id": "6",
+      "name": "Windfarm Princess Amalia",
+      "installed_capacity_mw": 120,
+      "commissioned": "04/06/2008"
+    },
+    {
+      "id": "9",
+      "name": "OWEZ",
+      "installed_capacity_mw": 108,
+      "commissioned": "18/04/2007"
+    }
+  ]
+}
