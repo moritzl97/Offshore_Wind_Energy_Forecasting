@@ -11,9 +11,9 @@
       "commissioned": "27/11/2020",
       "turbine_type": "SG 8.0-167 DD",
       "platform_height": 116.5,
-      "wind_height_scaling_factor": 1,
       "offshore_data_available": true,
-      "turbines": 94
+      "turbines": 94,
+      "nearest_KNMI_station": null
     },
     {
       "id": "Borssele_34",
@@ -26,9 +26,9 @@
       "commissioned": "06/01/2021",
       "turbine_type": "V164-9.5",
       "platform_height": 100,
-      "wind_height_scaling_factor": 1,
       "offshore_data_available": true,
-      "turbines": 77
+      "turbines": 77,
+      "nearest_KNMI_station": null
     },
     {
       "id": "Gemini",
@@ -41,9 +41,9 @@
       "commissioned": "08/05/2017",
       "turbine_type": "SWT-4.0-130",
       "platform_height": 120,
-      "wind_height_scaling_factor": 1,
       "offshore_data_available": true,
-      "turbines": 150
+      "turbines": 150,
+      "nearest_KNMI_station": null
     },
     {
       "id": "Hollandse_Kust_Zuid",
@@ -56,9 +56,9 @@
       "commissioned": "29/09/2023",
       "turbine_type": "SG 11.0-200 DD",
       "platform_height": 125.5,
-      "wind_height_scaling_factor": 1,
       "offshore_data_available": true,
-      "turbines": 139
+      "turbines": 139,
+      "nearest_KNMI_station": null
     },
     {
       "id": "Hollandse_Kust_Noord",
@@ -71,9 +71,9 @@
       "commissioned": "20/12/2023",
       "turbine_type": "SG 11.0-200 DD",
       "platform_height": 125.5,
-      "wind_height_scaling_factor": 1,
       "offshore_data_available": true,
-      "turbines": 69
+      "turbines": 69,
+      "nearest_KNMI_station": null
     },
     {
       "id": "Windfarm_Princess_Amalia",
