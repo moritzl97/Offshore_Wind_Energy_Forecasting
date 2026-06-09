@@ -12,6 +12,7 @@ except ImportError:
 from pathlib import Path
 import json
 import re
+import pandas as pd
 
 
 def preprocess_all(root_path: Path = None):
@@ -55,19 +56,31 @@ def preprocess_all(root_path: Path = None):
     print("Running KNMI preprocessing")
     raw_dataset_path = input_path / "knmi_dataset"
     start_year = 2015
+
     if any(raw_dataset_path.iterdir()):
-        try:
+        # try:
             filenames = [f.name for f in sorted(raw_dataset_path.glob("*.txt"))]
+
+            station_dfs = {}
             for file in filenames:
                 filepath = raw_dataset_path / file
                 df = preprocess_knmi_file(filepath, start_year=start_year)
                 station = df["Station"].iloc[0]
                 safe_name = re.sub(r"[^A-Za-z0-9_]+", "_", station).strip("_")
-                df.to_csv(output_path / f"knmi_{safe_name}.csv", index=False)
-            print("preprocessed Kaggle dataset saved.")
 
-        except Exception as e:
-            print(f"KNMI preprocessing failed {e}")
+                if safe_name in station_dfs:
+                    station_dfs[safe_name].append(df)
+                else:
+                    station_dfs[safe_name] = [df]
+
+            for safe_name, dfs in station_dfs.items():
+                combined = pd.concat(dfs, ignore_index=True).sort_values("timestamp")
+                combined.to_csv(output_path / f"knmi_{safe_name}.csv", index=False)
+
+            print("Preprocessed KNMI dataset saved.")
+
+        # except Exception as e:
+        #     print(f"KNMI preprocessing failed: {e}")
     else:
         print(f"{raw_dataset_path} is empty.")
     print("-" * 50)
