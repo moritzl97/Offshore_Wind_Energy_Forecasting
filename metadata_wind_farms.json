@@ -58,7 +58,7 @@
       "platform_height": 125.5,
       "offshore_data_available": true,
       "turbines": 139,
-      "nearest_KNMI_station": "Valkenburg"
+      "nearest_KNMI_station": "Hoek_van_Holland"
     },
     {
       "id": "Hollandse_Kust_Noord",
@@ -73,7 +73,7 @@
       "platform_height": 125.5,
       "offshore_data_available": true,
       "turbines": 69,
-      "nearest_KNMI_station": "Valkenburg"
+      "nearest_KNMI_station": "Hoek_van_Holland"
     },
     {
       "id": "Windfarm_Princess_Amalia",
