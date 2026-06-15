@@ -75,7 +75,9 @@ def preprocess_all(root_path: Path = None):
 
             for safe_name, dfs in station_dfs.items():
                 combined = pd.concat(dfs, ignore_index=True).sort_values("timestamp")
-                combined.to_csv(output_path / f"knmi_{safe_name}.csv", index=False)
+                combined = combined.set_index("timestamp")
+
+                combined.to_csv(output_path / f"knmi_{safe_name}.csv")
 
             print("Preprocessed KNMI dataset saved.")
 
