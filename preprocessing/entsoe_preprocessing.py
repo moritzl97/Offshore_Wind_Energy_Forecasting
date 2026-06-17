@@ -1,61 +1,64 @@
+import io
 import pandas as pd
 from pathlib import Path
-import os
+
+
+def preprocess_entsoe_content(raw_csv: str) -> pd.DataFrame:
+    """
+    Core function. Processes a single ENTSOE CSV's raw content
+    into an hourly offshore wind generation time series.
+    """
+    df = pd.read_csv(io.StringIO(raw_csv), sep=",", quotechar='"', na_values=["N/A"], low_memory=False)
+
+    df = df[df["Production Type"] == "Wind Offshore"]
+
+    df["Datetime"] = pd.to_datetime(
+        df["MTU (CET/CEST)"]
+        .str.split(" - ").str[0]
+        .str.replace(r"\(.*?\)", "", regex=True)
+        .str.strip(),
+        dayfirst=True
+    )
+
+    df = df[["Datetime", "Generation (MW)"]]
+    df.rename(columns={"Generation (MW)": "Generation_MW"}, inplace=True)
+    df["Generation_MW"] = pd.to_numeric(df["Generation_MW"], errors="coerce")
+
+    if (df["Generation_MW"].fillna(0) == 0).all():
+        return pd.DataFrame(columns=["Generation_MW"])
+
+    df = df.set_index("Datetime")
+    df = df.resample("h").mean()
+    df = df.ffill(limit=1)
+
+    return df
+
 
 def ENTSO_timeseries(path_raw: Path):
+    """Local-folder wrapper. Concatenates multiple daily/monthly ENTSOE exports."""
     raw_files = sorted(path_raw.glob("*.csv"))
-
-    # End product with a time series and total offshore power
     df_full_timeseries = pd.DataFrame()
 
     for file in raw_files:
         try:
-            df = pd.read_csv(file, sep=",", quotechar='"', na_values=["N/A"], low_memory=False)
+            with open(file, "r", encoding="utf-8") as f:
+                raw_csv = f.read()
+            df = preprocess_entsoe_content(raw_csv)
         except Exception as e:
             print(f"FAILED: {file.name} -> {e}")
+            continue
 
-        # Filter for Offshore Wind only
-        df = df[df["Production Type"] == "Wind Offshore"]
-
-        # Extract just the start time from the range string
-        df["Datetime"] = pd.to_datetime(
-            df["MTU (CET/CEST)"]
-            .str.split(" - ").str[0]
-            .str.replace(r"\(.*?\)", "", regex=True)
-            .str.strip(),
-            dayfirst=True
-        )
-
-        # Keep only the needed columns
-        df =df[["Datetime", "Generation (MW)"]]
-
-        # Rename for better consistency
-        df.rename(columns={"Generation (MW)": "Generation_MW"}, inplace=True)
-
-        # Convert to numeric data
-        df["Generation_MW"] = pd.to_numeric(df["Generation_MW"], errors="coerce")
-
-        # Check if file is empty (None or 0 values)
-        if (df["Generation_MW"].fillna(0) == 0).all():
+        if df.empty:
             print(f"File skipped because its empty: {file}")
             continue
 
-        # Set datetime as index
-        df = df.set_index("Datetime")
-
-        # Rename to hourly timestamps
-        df = df.resample("h").mean()
-
-        # Append to full time series df
         df_full_timeseries = pd.concat([df_full_timeseries, df])
 
-        # For incomplete year (days in the future), search for last valid entry and drop that day and consecutive days
     last_valid = df_full_timeseries["Generation_MW"].last_valid_index()
     if last_valid:
         last_valid_day = last_valid.date()
         df_full_timeseries = df_full_timeseries[df_full_timeseries.index.date < last_valid_day]
 
-    # Forward fill daylight saving times
     df_full_timeseries = df_full_timeseries.ffill(limit=1)
 
     return df_full_timeseries

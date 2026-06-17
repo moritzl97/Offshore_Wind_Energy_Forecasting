@@ -1,38 +1,37 @@
 import re
+import io
 import numpy as np
 import pandas as pd
 from pathlib import Path
 
 
-def extract_station_info(path: Path):
-    name = path.stem
+def extract_station_info_from_name(name: str):
     name = re.sub(r"\(\d+\)$", "", name).strip()
-
     match = re.match(r"(.+?)_(\d+)_(\d{4}-\d{4})", name)
     if match:
-        station_name = match.group(1).strip()
-        station_id = int(match.group(2))
-        period = match.group(3)
-        return station_name, station_id, period
-
+        return match.group(1).strip(), int(match.group(2)), match.group(3)
     return name, np.nan, ""
 
 
-def read_knmi_file(path: Path) -> pd.DataFrame:
+def parse_knmi_content(raw_text: str, source_filename: str) -> pd.DataFrame:
+    """
+    Core parser. Takes raw KNMI text content and the original filename
+    (used only to extract station metadata), returns a raw DataFrame.
+    """
+    lines = raw_text.splitlines(keepends=True)
     header_idx = None
     header_line = None
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        for i, line in enumerate(f):
-            if line.lstrip().startswith("# STN") or line.lstrip().startswith("#STN"):
-                header_idx = i
-                header_line = line
-                break
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("# STN") or line.lstrip().startswith("#STN"):
+            header_idx = i
+            header_line = line
+            break
     if header_idx is None:
-        raise ValueError(f"Could not find KNMI data header in {path.name}")
+        raise ValueError(f"Could not find KNMI data header in {source_filename}")
 
     columns = [c.strip() for c in header_line.lstrip("#").strip().split(",")]
     df = pd.read_csv(
-        path,
+        io.StringIO(raw_text),
         skiprows=header_idx + 1,
         names=columns,
         sep=",",
@@ -42,11 +41,12 @@ def read_knmi_file(path: Path) -> pd.DataFrame:
     )
     df.columns = df.columns.str.strip()
 
-    station_name, station_id, period = extract_station_info(path)
+    name_stem = Path(source_filename).stem
+    station_name, station_id, period = extract_station_info_from_name(name_stem)
     df["Station"] = station_name
     df["Station_ID"] = station_id
     df["Source_Period"] = period
-    df["Source_File"] = path.name
+    df["Source_File"] = source_filename
     return df
 
 
@@ -128,8 +128,12 @@ def interpolate_station(group: pd.DataFrame, continuous_cols, discrete_fill_cols
     return group.reset_index()
 
 
-def preprocess_knmi_file(path: Path, start_year: int = 2015) -> pd.DataFrame:
-    df = read_knmi_file(path)
+def preprocess_knmi_content(raw_text: str, source_filename: str, start_year: int = 2015) -> pd.DataFrame:
+    """
+    Core preprocessing function. Works on raw text content directly,
+    so it can be used both for local files and blob storage streams.
+    """
+    df = parse_knmi_content(raw_text, source_filename)
     df = parse_timestamps(df)
     df = df.drop_duplicates(subset=["Station_ID", "timestamp"], keep="last").copy()
     df = df[df["timestamp"] >= f"{start_year}-01-01"].copy()
@@ -165,3 +169,10 @@ def preprocess_knmi_file(path: Path, start_year: int = 2015) -> pd.DataFrame:
     ] if c in df.columns]
 
     return df[final_cols].copy()
+
+
+def preprocess_knmi_file(path: Path, start_year: int = 2015) -> pd.DataFrame:
+    """Local-file wrapper around the core content function, used by preprocess_all_raw_datasets.py."""
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        raw_text = f.read()
+    return preprocess_knmi_content(raw_text, path.name, start_year=start_year)
