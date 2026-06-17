@@ -1,3 +1,4 @@
 azure-functions
 pymongo[srv]>=4.0
 pandas
+python-dotenv
