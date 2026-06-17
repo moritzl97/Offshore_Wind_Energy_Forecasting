@@ -8,7 +8,7 @@ curves: the single-turbine Kaggle SCADA dataset and the Hollandse Kust Zuid
 offshore farm aggregate.
 
 Inputs:
-  datasets/entsoe_nl_offshore_wind.csv
+  datasets/entsoe.csv  (produced by preprocessing/preprocess_all_raw_datasets.py)
   datasets/knmi_209_2019.csv
   datasets_raw/kaggle_dataset/T1.csv
   datasets_raw/offshore_dataset/Hollandse_Kust_Zuid.csv
@@ -39,7 +39,7 @@ ENTSOE_CAPACITY_MW = 885.5  # max NL offshore generation observed in 2019
 
 
 def load_entsoe_knmi():
-    entsoe = pd.read_csv(ROOT / "datasets" / "entsoe_nl_offshore_wind.csv",
+    entsoe = pd.read_csv(ROOT / "datasets" / "entsoe.csv",
                           parse_dates=["Datetime"], index_col="Datetime")
     entsoe = entsoe.loc[ENTSOE_PERIOD[0]:ENTSOE_PERIOD[1]]
 

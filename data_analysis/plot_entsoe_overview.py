@@ -4,7 +4,7 @@ Plot for each dataset: ENTSOE NL offshore wind generation.
 Produces a time series plot and a distribution plot for the compiled ENTSOE
 dataset, in the same style as the existing fig_knmi_* figures.
 
-Input:  datasets/entsoe_nl_offshore_wind.csv
+Input:  datasets/entsoe.csv  (produced by preprocessing/preprocess_all_raw_datasets.py)
 Output: figures/fig_entsoe_timeseries_2019.png
         figures/fig_entsoe_distribution_2019.png
         figures/fig_entsoe_timeseries_full.png
@@ -22,7 +22,7 @@ FIG_DIR.mkdir(exist_ok=True)
 
 
 def load_entsoe():
-    df = pd.read_csv(ROOT / "datasets" / "entsoe_nl_offshore_wind.csv",
+    df = pd.read_csv(ROOT / "datasets" / "entsoe.csv",
                       parse_dates=["Datetime"], index_col="Datetime")
     return df
 
