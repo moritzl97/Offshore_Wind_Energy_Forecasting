@@ -134,7 +134,7 @@ def get_windfarm_names(req: func.HttpRequest) -> func.HttpResponse:
     """Return a list of unique windfarm ids present in the Timeseries collection, excluding TOTAL."""
     def body(req):
         collection = get_timeseries_collection()
-        farms = sorted(f for f in collection.distinct("farm_id") if f and f != "TOTAL")
+        farms = sorted(collection.distinct("farm_id"))
         return _json({"windfarms": farms, "count": len(farms)})
     return _handle(body, req)
 
