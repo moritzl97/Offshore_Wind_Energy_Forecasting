@@ -1,12 +1,13 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import azure.functions as func
 from pymongo import MongoClient, UpdateOne
 
 from open_meteo_fetcher import fetch_openmeteo_forecast
 from knowledge_driven_model import predict_power_knowledge_model
+from entsoe_web_fetcher import insert_entsoe_offshore_wind_actual
 
 app = func.FunctionApp()
 
@@ -30,7 +31,7 @@ def get_collection():
 
 @app.timer_trigger(
     arg_name="timer",
-    schedule="0 0 * * * *",  # every hour, on the hour
+    schedule="0 2 * * * *",  # every hour, on the hour
     run_on_startup=True
 )
 def hourly_weather_forecast_and_power_predictor(timer: func.TimerRequest) -> None:
@@ -88,3 +89,29 @@ def hourly_weather_forecast_and_power_predictor(timer: func.TimerRequest) -> Non
         logging.info(f"TOTAL: upserted={total_result.upserted_count}, modified={total_result.modified_count}")
 
     logging.info("Hourly Open-Meteo forecast ingestion complete")
+
+@app.timer_trigger(
+    arg_name="timer",
+    schedule="0 2 * * * *",  # every hour, on the hour
+    run_on_startup=True
+)
+def hourly_entsoe_actual_ingestion(timer: func.TimerRequest) -> None:
+    logging.info("Hourly ENTSOE actual generation ingestion started")
+    AREA_CODE_NL = "BZN|10YNL----------L"
+
+    today = datetime.utcnow().date()
+    yesterday = today - timedelta(days=1)
+
+    try:
+        insert_entsoe_offshore_wind_actual(
+            area_code=AREA_CODE_NL,
+            date_from=yesterday.isoformat(),
+            date_to=today.isoformat(),
+            mongo_uri=MONGO_URI,
+            mongo_db=MONGO_DB,
+            collection_name=COLLECTION,
+        )
+    except Exception as e:
+        logging.error(f"Failed to fetch/insert ENTSOE actual generation: {e}")
+
+    logging.info("Hourly ENTSOE actual generation ingestion complete")
