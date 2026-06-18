@@ -1,102 +1,201 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — Offshore Wind Energy Forecasting{% endblock %}
+{% block title %}Dashboard - Offshore Wind Energy Forecasting{% endblock %}
 
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-    .dashboard-wrap { width: 100%; }
-    .chart-card canvas { width: 100% !important; height: 420px !important; }
-</style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-wrap">
     <div class="page-header">
-        <h2>Forecast Dashboard</h2>
-        <span class="badge">{{ data.data_source }}</span>
+        <h2>{{ data.station_name }} - Forecast Dashboard</h2>
+        <span class="badge {% if data.error %}badge-error{% endif %}">{{ data.data_source }}</span>
     </div>
+
+    {% if data.error %}
+    <div class="error-banner">
+        ⚠ Could not load data from the API. Please try refreshing the page.
+    </div>
+    {% else %}
 
     <div class="metrics-row">
         <div class="metric-card">
-            <span class="metric-label">MAE</span>
-            <span class="metric-value">{{ data.metrics.mae }} <small>MW</small></span>
-            <span class="metric-desc">Mean Absolute Error</span>
-        </div>
-        <div class="metric-card">
-            <span class="metric-label">RMSE</span>
-            <span class="metric-value">{{ data.metrics.rmse }} <small>MW</small></span>
-            <span class="metric-desc">Root Mean Squared Error</span>
-        </div>
-        <div class="metric-card">
-            <span class="metric-label">R²</span>
-            <span class="metric-value">{{ data.metrics.r2 }}</span>
-            <span class="metric-desc">Coefficient of Determination</span>
-        </div>
-        <div class="metric-card">
-            <span class="metric-label">Updated</span>
+            <span class="metric-label">Last data refresh</span>
             <span class="metric-value small-val">{{ data.last_updated }}</span>
-            <span class="metric-desc">Last data refresh</span>
         </div>
     </div>
 
     <div class="chart-card">
-        <h3>Hourly Power Output - Predicted vs Actual <span class="unit">(MW)</span></h3>
+        <h3>Hourly Power Output - Model Comparison <span class="unit">(MW)</span></h3>
         <div class="chart-container">
-            <canvas id="forecastChart"></canvas>
+            <canvas id="powerChart"></canvas>
+        </div>
+
+    </div>
+
+    {% if data.has_wind_speed %}
+    <div class="chart-card" style="margin-top: 1.25rem;" id="windCard">
+        <h3>Wind Speed <span class="unit">(m/s)</span></h3>
+        <div class="chart-container">
+            <canvas id="windChart"></canvas>
         </div>
     </div>
-</div>
+    {% endif %}
 
-<script>
-    const labels = {{ data.labels | tojson }};
-    const predicted = {{ data.predicted | tojson }};
-    const actual = {{ data.actual | tojson }};
+    <script>
+        const labels = {{ data.labels | tojson }};
+        const nowIndex = {{ data.now_index }};
+        const isOverall = {{ 'true' if station == 'overall' else 'false' }};
 
-    const ctx = document.getElementById('forecastChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Predicted (MW)',
-                    data: predicted,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37,99,235,0.08)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    tension: 0.3,
-                    fill: true,
-                },
-                {
-                    label: 'Actual (MW)',
-                    data: actual,
-                    borderColor: '#16a34a',
-                    backgroundColor: 'rgba(22,163,74,0.06)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    tension: 0.3,
-                    fill: false,
-                    borderDash: [5, 3],
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} MW` } }
-            },
-            scales: {
-                x: { grid: { color: 'rgba(0,0,0,0.04)' } },
-                y: {
-                    grid: { color: 'rgba(0,0,0,0.04)' },
-                    title: { display: true, text: 'Power Output (MW)' }
-                }
+        const hasKnowledgeDriven = {{ 'true' if data.has_knowledge_driven else 'false' }};
+        const hasNeuralNetwork = {{ 'true' if data.has_neural_network else 'false' }};
+        const hasDecisionTree = {{ 'true' if data.has_decision_tree else 'false' }};
+        const hasActual = {{ 'true' if data.has_actual else 'false' }};
+
+        const knowledgeDriven = {{ data.knowledge_driven | tojson }};
+        const neuralNetwork = {{ data.neural_network | tojson }};
+        const decisionTree = {{ data.decision_tree | tojson }};
+        const actual = {{ data.actual | tojson }};
+        const windSpeed = {{ data.wind_speed | tojson }};
+
+        // Now line plugin
+        const nowLinePlugin = {
+            id: 'nowLine',
+            afterDraw(chart) {
+                if (nowIndex === -1) return;  // now is outside data range, don't draw
+                const ctx = chart.ctx;
+                const xAxis = chart.scales.x;
+                const yAxis = chart.scales.y;
+                const x = xAxis.getPixelForValue(nowIndex);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.setLineDash([6, 4]);
+                ctx.moveTo(x, yAxis.top);
+                ctx.lineTo(x, yAxis.bottom);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ef4444';
+                ctx.stroke();
+
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillRect(x - 20, yAxis.top - 1, 40, 18);
+                ctx.fillStyle = '#fff';
+                ctx.fillText('Now', x, yAxis.top + 12);
+                ctx.restore();
             }
-        }
-    });
-</script>
+        };
+
+        const sharedXAxis = {
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { maxTicksLimit: 12 }
+        };
+
+        const powerDatasets = [];
+
+        if (hasKnowledgeDriven) powerDatasets.push({
+            label: 'Knowledge Driven',
+            data: knowledgeDriven,
+            borderColor: '#2563eb',
+            backgroundColor: 'transparent',
+            borderWidth: 2, pointRadius: 2, tension: 0.3, fill: false,
+        });
+
+        if (hasNeuralNetwork) powerDatasets.push({
+            label: 'Neural Network',
+            data: neuralNetwork,
+            borderColor: '#e07b1a',
+            backgroundColor: 'transparent',
+            borderWidth: 2, pointRadius: 2, tension: 0.3, fill: false,
+        });
+
+        if (hasDecisionTree) powerDatasets.push({
+            label: 'Decision Tree',
+            data: decisionTree,
+            borderColor: '#7c3aed',
+            backgroundColor: 'transparent',
+            borderWidth: 2, pointRadius: 2, tension: 0.3, fill: false,
+        });
+
+        if (isOverall && hasActual) powerDatasets.push({
+            label: 'Actual (MW)',
+            data: actual,
+            borderColor: '#16a34a',
+            backgroundColor: 'transparent',
+            borderWidth: 2.5, pointRadius: 2, tension: 0.3, fill: false,
+            borderDash: [5, 3], spanGaps: false,
+        });
+
+        const powerCtx = document.getElementById('powerChart').getContext('2d');
+        const powerChart = new Chart(powerCtx, {
+            type: 'line',
+            data: { labels: labels, datasets: powerDatasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { callbacks: { label: ctx => ctx.parsed.y !== null ? `${ctx.dataset.label}: ${ctx.parsed.y} MW` : null } }
+                },
+                scales: {
+                    x: sharedXAxis,
+                    y: { grid: { color: 'rgba(0,0,0,0.04)' }, title: { display: true, text: 'Power Output (MW)' } }
+                }
+            },
+            plugins: [nowLinePlugin]
+        });
+
+        {% if data.has_wind_speed %}
+        const windCtx = document.getElementById('windChart').getContext('2d');
+        const windChart = new Chart(windCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Wind Speed (m/s)',
+                    data: windSpeed,
+                    borderColor: '#0891b2',
+                    backgroundColor: 'rgba(8,145,178,0.08)',
+                    borderWidth: 2, pointRadius: 2, tension: 0.3, fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} m/s` } }
+                },
+                scales: {
+                    x: sharedXAxis,
+                    y: { grid: { color: 'rgba(0,0,0,0.04)' }, title: { display: true, text: 'Wind Speed (m/s)' }, min: 0 }
+                }
+            },
+            plugins: [nowLinePlugin]
+        });
+
+        // Sync tooltips
+        document.getElementById('powerChart').addEventListener('mousemove', (e) => {
+            const points = powerChart.getElementsAtEventForMode(e, 'index', { intersect: false }, true);
+            if (points.length) {
+                windChart.tooltip.setActiveElements([{ datasetIndex: 0, index: points[0].index }], { x: 0, y: 0 });
+                windChart.update('none');
+            }
+        });
+        document.getElementById('windChart').addEventListener('mousemove', (e) => {
+            const points = windChart.getElementsAtEventForMode(e, 'index', { intersect: false }, true);
+            if (points.length) {
+                const active = powerDatasets.map((_, i) => ({ datasetIndex: i, index: points[0].index }));
+                powerChart.tooltip.setActiveElements(active, { x: 0, y: 0 });
+                powerChart.update('none');
+            }
+        });
+        {% endif %}
+    </script>
+    {% endif %}
+</div>
 {% endblock %}

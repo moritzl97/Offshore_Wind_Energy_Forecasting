@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Home — Offshore Wind Energy Forecasting{% endblock %}
+{% block title %}Home - Offshore Wind Energy Forecasting{% endblock %}
 
 {% block content %}
 <section class="hero">
@@ -9,7 +9,14 @@
             A machine learning pipeline for predicting offshore wind power output
             using KNMI weather data and SCADA measurements from Dutch wind farms.
         </p>
-        <a href="/dashboard" class="btn">View Forecast Dashboard →</a>
+        <div class="station-buttons">
+            <a href="/dashboard/overall" class="btn">Overall</a>
+            <a href="/dashboard/gemini" class="btn btn-outline">Gemini</a>
+            <a href="/dashboard/borssele_12" class="btn btn-outline">Borssele 1&2</a>
+            <a href="/dashboard/borssele_34" class="btn btn-outline">Borssele 3&4</a>
+            <a href="/dashboard/hollandse_kust_zuid" class="btn btn-outline">Hollandse Kust Zuid</a>
+            <a href="/dashboard/hollandse_kust_noord" class="btn btn-outline">Hollandse Kust Noord</a>
+        </div>
     </div>
 </section>
 
