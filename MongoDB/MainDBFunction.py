@@ -59,8 +59,16 @@ def build_and_insert():
         "metadata": wind_farms_by_id
     }
 
-    collection.insert_one(document)
-    print(f"\nInserted combined document with {len(wind_farms_by_id)} location(s)")
+    for farm_name, farm_data in wind_farms_by_id.items():
+        document = {
+            "_id": farm_name,
+            "location": farm_name,
+            **farm_data
+        }
+        collection.insert_one(document)
+
+    print(f"\nInserted {len(wind_farms_by_id)}")
+
 
 if __name__ == "__main__":
     print("\n" + "=" * 50)
