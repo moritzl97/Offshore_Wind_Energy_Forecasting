@@ -305,14 +305,12 @@ def get_predictions(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="windfarms/{windfarm_name}/metadata", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def get_metadata(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Return summary metadata for a specific windfarm, computed from its readings:
-    number of readings, covered time range, observed rated capacity (max power),
-    mean power, mean wind speed, and the resulting capacity factor.
+    Return the stored metadata for a specific windfarm.
 
-    NOTE: left unchanged for now per request -- still queries the old flat
-    Station/power_mw/wind_speed_ms field names against the Timeseries
-    collection, so it will currently return 404 for any real farm_id until
-    this is updated to match the nested weather/predictions schema.
+    The Metadata collection holds a single document shaped like
+    {"Metadata": {"<farm_id>": {<per-column stats>}, ...}}. This endpoint
+    fetches that document and hands back the block for the requested windfarm
+    as JSON -- no computation, just whatever is stored.
     """
 
     def body(req):
@@ -320,40 +318,18 @@ def get_metadata(req: func.HttpRequest) -> func.HttpResponse:
         if not windfarm_name:
             return _error("windfarm name is required", 400)
 
-        pipeline = [
-            {"$match": {"Station": windfarm_name}},
-            {"$group": {
-                "_id": "$Station",
-                "readings": {"$sum": 1},
-                "start": {"$min": "$timestamp"},
-                "end": {"$max": "$timestamp"},
-                "max_power_mw": {"$max": "$power_mw"},
-                "mean_power_mw": {"$avg": "$power_mw"},
-                "mean_wind_speed_ms": {"$avg": "$wind_speed_ms"},
-            }},
-        ]
+        collection = get_metadata_collection()
+        doc = collection.find_one({}, {"_id": 0})
+        if not doc or "Metadata" not in doc:
+            return _error("No metadata document found", 404)
 
-        collection = get_timeseries_collection()
-        result = list(collection.aggregate(pipeline))
-        if not result:
-            return _error(f"No data found for windfarm '{windfarm_name}'", 404)
+        farms = doc["Metadata"]
+        if windfarm_name not in farms:
+            return _error(f"No metadata found for windfarm '{windfarm_name}'", 404)
 
-        doc = result[0]
-        capacity = doc.get("max_power_mw")
-        mean_power = doc.get("mean_power_mw")
-        capacity_factor = round(mean_power / capacity, 3) if capacity else None
         return _json({
             "windfarm": windfarm_name,
-            "readings": doc["readings"],
-            "start": doc["start"],
-            "end": doc["end"],
-            "rated_capacity_mw": round(capacity, 1) if capacity is not None else None,
-            "mean_power_mw": round(mean_power, 1) if mean_power is not None else None,
-            "mean_wind_speed_ms": (
-                round(doc["mean_wind_speed_ms"], 2)
-                if doc.get("mean_wind_speed_ms") is not None else None
-            ),
-            "capacity_factor": capacity_factor,
+            "metadata": farms[windfarm_name],
         })
 
     return _handle(body, req)
