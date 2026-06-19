@@ -3,8 +3,10 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from weather_data_feature_engineering import engineer_features
+
 # Path to the saved models folder
-MODELS_DIR = Path(__file__).parent / "saved"
+MODELS_DIR = Path(__file__).resolve().parent / "trained_models"
 
 # Features the model expects (must match training order)
 FEATURES = [
@@ -56,27 +58,38 @@ def predict_power(wind_farm_name, features_dict):
         Predicted power output in MW.
     """
 
-    # Load the correct model
     model_path = MODELS_DIR / f"decision_tree_{wind_farm_name}.pkl"
     if not model_path.exists():
         raise FileNotFoundError(f"No saved model for {wind_farm_name} at {model_path}")
-    
+
     model = joblib.load(model_path)
-    
-    # Build input array in correct feature order
+
     try:
         X = pd.DataFrame([[features_dict[f] for f in FEATURES]], columns=FEATURES)
     except KeyError as e:
         raise KeyError(f"Missing required feature: {e}")
-    
-    # Predict
+
     prediction = model.predict(X)[0]
-    return float(prediction)
+    return max(0.0, float(prediction))
+
+
+def predict_power_decision_tree(wind_farm_name, weather_df):
+    """
+    Full pipeline:
+    raw weather data -> feature engineering -> decision tree prediction
+    Returns predictions for every row in weather_df (not just the latest).
+    """
+    features_df = engineer_features(wind_farm_name, weather_df, return_all_rows=True)
+    predictions = []
+    for _, row in features_df.iterrows():
+        features_dict = row.to_dict()
+        predictions.append(predict_power(wind_farm_name, features_dict))
+    return predictions
 
 
 # Example usage
 if __name__ == "__main__":
-    
+
     example_features = {
         "wind_speed_hub_ms":   12.5,
         "wind_power_density":  1953.125,
@@ -94,6 +107,6 @@ if __name__ == "__main__":
         "hour_sin":            0.0,
         "hour_cos":            1.0,
     }
-    
+
     prediction = predict_power("Gemini", example_features)
     print(f"Predicted power output for Gemini: {prediction:.2f} MW")

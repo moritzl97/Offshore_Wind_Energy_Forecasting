@@ -7,6 +7,8 @@ from pymongo import MongoClient, UpdateOne
 
 from open_meteo_fetcher import fetch_openmeteo_forecast
 from knowledge_driven_model import predict_power_knowledge_model
+from predict_power_neural import predict_power_neural_network
+from predict_decision_tree import predict_power_decision_tree
 from entsoe_web_fetcher import insert_entsoe_offshore_wind_actual
 
 app = func.FunctionApp()
@@ -31,25 +33,30 @@ def get_collection():
 
 @app.timer_trigger(
     arg_name="timer",
-    schedule="0 2 * * * *",  # every hour, on the hour
+    schedule="0 2 * * * *",
     run_on_startup=True
 )
 def hourly_weather_forecast_and_power_predictor(timer: func.TimerRequest) -> None:
     logging.info("Hourly Open-Meteo forecast ingestion started")
 
     collection = get_collection()
-    totals_by_timestamp = {}
+    totals_by_timestamp = {}  # {ts: {"knowledge_based_mw": x, "decision_tree_mw": y, "neural_network_mw": z}}
 
     for farm_id, info in FARMS.items():
         try:
             df = fetch_openmeteo_forecast(info["lat"], info["lon"], forecast_hours=24)
 
             predicted_knowledge_model = predict_power_knowledge_model(df["wind_speed_ms"].values, farm_id)
+            predicted_decision_tree = predict_power_decision_tree(farm_id, df)
+            predicted_neural_network = predict_power_neural_network(farm_id, df)
 
             operations = []
             for i, (_, row) in enumerate(df.iterrows()):
                 ts = row["timestamp"].to_pydatetime()
-                predicted_knowledge_model_float = float(predicted_knowledge_model[i])
+
+                knowledge_val = float(predicted_knowledge_model[i])
+                tree_val = float(predicted_decision_tree[i])
+                nn_val = float(predicted_neural_network[i])
 
                 operations.append(
                     UpdateOne(
@@ -61,12 +68,19 @@ def hourly_weather_forecast_and_power_predictor(timer: func.TimerRequest) -> Non
                                 "pressure_hpa": float(row["pressure_hpa"]),
                                 "temperature_c": float(row["temperature_c"]),
                             },
-                            "predictions.knowledge_based_mw": predicted_knowledge_model_float,
+                            "predictions.knowledge_based_mw": knowledge_val,
+                            "predictions.decision_tree_mw": tree_val,
+                            "predictions.neural_network_mw": nn_val,
                         }},
                         upsert=True
                     )
                 )
-                totals_by_timestamp[ts] = totals_by_timestamp.get(ts, 0) + predicted_knowledge_model_float
+
+                if ts not in totals_by_timestamp:
+                    totals_by_timestamp[ts] = {"knowledge_based_mw": 0.0, "decision_tree_mw": 0.0, "neural_network_mw": 0.0}
+                totals_by_timestamp[ts]["knowledge_based_mw"] += knowledge_val
+                totals_by_timestamp[ts]["decision_tree_mw"] += tree_val
+                totals_by_timestamp[ts]["neural_network_mw"] += nn_val
 
             result = collection.bulk_write(operations, ordered=False)
             logging.info(f"{farm_id}: upserted={result.upserted_count}, modified={result.modified_count}")
@@ -75,15 +89,18 @@ def hourly_weather_forecast_and_power_predictor(timer: func.TimerRequest) -> Non
             logging.error(f"Failed to fetch/insert forecast for {farm_id}: {e}")
             continue
 
-    # write the TOTAL documents
     if totals_by_timestamp:
         total_operations = [
             UpdateOne(
                 {"timestamp": ts, "farm_id": "TOTAL"},
-                {"$set": {"predictions.knowledge_based_mw": total_power}},
+                {"$set": {
+                    "predictions.knowledge_based_mw": totals["knowledge_based_mw"],
+                    "predictions.decision_tree_mw": totals["decision_tree_mw"],
+                    "predictions.neural_network_mw": totals["neural_network_mw"],
+                }},
                 upsert=True
             )
-            for ts, total_power in totals_by_timestamp.items()
+            for ts, totals in totals_by_timestamp.items()
         ]
         total_result = collection.bulk_write(total_operations, ordered=False)
         logging.info(f"TOTAL: upserted={total_result.upserted_count}, modified={total_result.modified_count}")

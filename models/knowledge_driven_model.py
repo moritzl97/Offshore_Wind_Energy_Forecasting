@@ -1,9 +1,8 @@
 import json
 from pathlib import Path
-
 import numpy as np
 
-_PARAMS_PATH = Path(__file__).resolve().parent / "knowledge_driven_model_params.json"
+_PARAMS_PATH = Path(__file__).resolve().parent / "trained_models" / "knowledge_driven_model_params.json"
 _FITTED_PARAMS = None
 
 def _load_params() -> dict:

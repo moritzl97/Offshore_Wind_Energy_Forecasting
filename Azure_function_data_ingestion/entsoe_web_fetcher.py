@@ -125,8 +125,8 @@ def insert_entsoe_offshore_wind_actual(area_code: str, date_from: str, date_to: 
 if __name__ == "__main__":
     data = fetch_entsoe_generation(
         area_code="BZN|10YNL----------L",
-        date_from="2026-06-17",
-        date_to="2026-06-18",
+        date_from="2026-06-18",
+        date_to="2026-06-19",
     )
 
     offshore_wind = extract_production_type_series(data, PRODUCTION_TYPE_WIND_OFFSHORE)
