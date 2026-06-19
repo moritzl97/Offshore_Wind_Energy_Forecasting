@@ -224,7 +224,7 @@ footer {
 .small-val { font-size: 1rem !important; padding-top: 0.25rem; }
 .metric-desc { font-size: 0.78rem; color: var(--muted); }
 
-/* DASHBOARD — CHART */
+/* DASHBOARD - CHART */
 .chart-card {
     background: var(--white);
     border: 1px solid var(--border);
@@ -280,3 +280,11 @@ footer {
 .station-icon { font-size: 2rem; }
 .station-card h3 { font-size: 1.05rem; font-weight: 600; }
 .station-link { font-size: 0.85rem; color: var(--blue); margin-top: auto; }
+
+/* DISCLAIMER */
+.disclaimer {
+    margin-top: 1rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+}

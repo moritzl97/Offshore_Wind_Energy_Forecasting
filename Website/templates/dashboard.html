@@ -42,6 +42,8 @@
     </div>
     {% endif %}
 
+    <p class="disclaimer">⚠ Note: ML predictions are estimates and may differ from actual power output.</p>
+
     <script>
         const labels = {{ data.labels | tojson }};
         const nowIndex = {{ data.now_index }};
