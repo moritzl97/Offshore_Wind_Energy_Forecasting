@@ -1,6 +1,7 @@
 # add collumns as dictionaries in MongoDB, onetime-function no hardcode, add additional collumns 
 
 import os
+import json
 import pandas as pd
 from pymongo import MongoClient
 
@@ -24,7 +25,15 @@ FARMS = {
 
 
 def build_and_insert():
-    all_locations = {}
+    json_path = os.path.join(BASE_DIR, "metadata_wind_farms.json")
+
+    with open(json_path, "r") as f:
+        wind_farms_data = json.load(f)
+
+    wind_farms_by_id = {}
+    for farm in wind_farms_data["wind_farms"]:
+        farm_id = farm.pop("id")
+        wind_farms_by_id[farm_id] = farm
 
     for farm_name, csv_file in FARMS.items():
         df = pd.read_csv(os.path.join(FOLDER_PATH, csv_file), on_bad_lines='skip')
@@ -39,16 +48,19 @@ def build_and_insert():
                     "median": float(numeric_col.median()),
                 }
 
-        all_locations[farm_name] = stats
+        if farm_name in wind_farms_by_id:
+            wind_farms_by_id[farm_name]["statistical_metrics"] = stats
+        else:
+            wind_farms_by_id[farm_name] = {"statistical_metrics": stats}
+
         print(f"Processed '{farm_name}' ({len(stats)} columns)")
 
     document = {
-        "Metadata": all_locations
+        "metadata": wind_farms_by_id
     }
 
     collection.insert_one(document)
-    print(f"Inserted metadata for '{farm_name}' ({len(stats)} columns)")
-
+    print(f"\nInserted combined document with {len(wind_farms_by_id)} location(s)")
 
 if __name__ == "__main__":
     print("\n" + "=" * 50)
