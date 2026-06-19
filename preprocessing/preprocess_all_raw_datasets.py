@@ -1,14 +1,9 @@
 import numpy as np
-try:
-    from .entsoe_preprocessing import ENTSO_timeseries
-    from .kaagle_preprocessing import Kaagle
-    from .knmi_preprocessing import preprocess_knmi_file
-    from .offshore_preprocessing import preprocess_wind_farm
-except ImportError:
-    from entsoe_preprocessing import ENTSO_timeseries
-    from kaagle_preprocessing import Kaagle
-    from knmi_preprocessing import preprocess_knmi_file
-    from offshore_preprocessing import preprocess_wind_farm
+
+from entsoe_preprocessing import ENTSO_timeseries
+from kaagle_preprocessing import Kaagle
+from knmi_preprocessing import preprocess_knmi_file
+from offshore_preprocessing import preprocess_wind_farm
 from pathlib import Path
 import json
 import re

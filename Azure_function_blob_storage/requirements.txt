@@ -5,3 +5,4 @@
 azure-functions
 pymongo
 pandas
+azure-storage-blob

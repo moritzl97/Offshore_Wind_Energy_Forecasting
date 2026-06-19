@@ -5,7 +5,6 @@ import os
 
 import azure.functions as func
 from pymongo import MongoClient
-from dotenv import load_dotenv
 import pandas as pd
 from azure.storage.blob import BlobServiceClient
 
@@ -15,13 +14,12 @@ from kaagle_preprocessing import preprocess_kaggle_content
 from entsoe_preprocessing import preprocess_entsoe_content
 
 # ---------- App & DB setup ----------
-load_dotenv("../.env")
 
 app = func.FunctionApp()
 
 MONGO_URI = os.environ["MONGO_URI"]
-METADATA_DB  = os.environ.get("MONGO_METADATA_DB", "ProjectGroup3")
-METADATA_COL = os.environ.get("MONGO_METADATA_COLLECTION", "Group3")
+MONGO_DB  = os.environ["MONGO_DB"]
+METADATA_COL = os.environ["MONGO_COLLECTION_METADATA"]
 AZURE_STORAGE_CONNECTION_STRING = os.environ["AzureWebJobsStorage"]
 
 PROCESSED_CONTAINER = "processed"
@@ -33,9 +31,9 @@ def get_farm_capacity(farm_name: str):
     Returns None if the farm or the field doesn't exist.
     """
     client = MongoClient(MONGO_URI)
-    db = client[METADATA_DB]
+    db = client[MONGO_DB]
     doc = db[METADATA_COL].find_one(
-        {"id": farm_name},
+        {"_id": farm_name},
         {"installed_capacity_mw": 1, "_id": 0}
     )
     return doc.get("installed_capacity_mw") if doc else None
@@ -43,7 +41,7 @@ def get_farm_capacity(farm_name: str):
 
 def get_known_farm_names() -> list:
     client = MongoClient(MONGO_URI)
-    db = client[METADATA_DB]
+    db = client[MONGO_DB]
     doc = db[METADATA_COL].find_one({"wind_farms": {"$exists": True}})
     if not doc:
         return []
