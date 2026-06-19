@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Offshore Wind Energy Forecasting{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a class="nav-brand" href="/">⚡ Wind Forecast</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <div class="dropdown">
+                    <span class="dropdown-toggle">Stations ▾</span>
+                    <div class="dropdown-menu">
+                        <a href="/dashboard/overall">Overall</a>
+                        <a href="/dashboard/gemini">Gemini</a>
+                        <a href="/dashboard/borssele_12">Borssele 1&2</a>
+                        <a href="/dashboard/borssele_34">Borssele 3&4</a>
+                        <a href="/dashboard/hollandse_kust_zuid">Hollandse Kust Zuid</a>
+                        <a href="/dashboard/hollandse_kust_noord">Hollandse Kust Noord</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>Offshore Wind Energy Forecasting &dash; Group 3 &dash {{ 2026 }}</p>
+    </footer>
+</body>
+</html>
