@@ -15,7 +15,8 @@ def fetch_openmeteo_forecast(lat: float, lon: float, forecast_hours: int = 24) -
             "wind_speed_unit": "ms",
             "timezone": "Europe/Amsterdam",
             "forecast_hours": forecast_hours,
-        }
+        },
+        timeout=15
     )
     response.raise_for_status()
     data = response.json()

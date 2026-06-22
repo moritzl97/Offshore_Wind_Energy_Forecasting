@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from weather_data_feature_engineering import engineer_features
+from models.feature_engineering.weather_data_feature_engineering import engineer_features
 
 # Path to the saved models folder
 MODELS_DIR = Path(__file__).resolve().parent / "trained_models"

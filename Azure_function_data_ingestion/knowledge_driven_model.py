@@ -20,6 +20,7 @@ def double_logistic(v, alpha1, beta1, gamma1, delta1, alpha2, beta2, gamma2, del
     return (logistic_piece(v, alpha1, beta1, gamma1, delta1) +
             logistic_piece(v, alpha2, beta2, gamma2, delta2))
 
+
 def predict_power_knowledge_model(wind_speed, wind_farm_name: str):
     """
     Predict offshore wind farm power output from wind speed using the
@@ -28,7 +29,7 @@ def predict_power_knowledge_model(wind_speed, wind_farm_name: str):
     Parameters
     ----------
     wind_speed : float, list, or array-like
-        Wind speed(s) in m/s, already scaled to platform/hub height.
+        Raw wind speed(s) in m/s from the nearest KNMI station.
     wind_farm_name : str
         Farm id matching a key in fitted_params.json (e.g. "Borssele_12").
 
@@ -50,13 +51,19 @@ def predict_power_knowledge_model(wind_speed, wind_farm_name: str):
     popt = farm_data["params"]
     cut_in = farm_data["cut_in"]
     cut_out = farm_data["cut_out"]
+    linear_fit = farm_data["windspeed_linear_fit"]
+    slope = linear_fit["slope"]
+    intercept = linear_fit["intercept"]
 
     wind_speed = np.asarray(wind_speed, dtype=float)
+
+    wind_speed = slope * wind_speed + intercept
+
     wind_speed = wind_speed * WINDSPEED_SCALING_FOR_PLATFORM_HEIGHT
 
     p = double_logistic(wind_speed, *popt)
-    p = np.where(wind_speed >= cut_out, 0, p)   # cut-out
-    p = np.where(wind_speed < cut_in, 0, p)     # cut-in
+    p = np.where(wind_speed >= cut_out, 0, p)  # cut-out
+    p = np.where(wind_speed < cut_in, 0, p)  # cut-in
     p = np.maximum(p, 0)
 
     return p

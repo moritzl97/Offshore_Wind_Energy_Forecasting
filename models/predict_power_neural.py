@@ -2,7 +2,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
-from weather_data_feature_engineering import engineer_features
+from models.feature_engineering.weather_data_feature_engineering import engineer_features
 
 FARMS = {
     "Borssele_12",

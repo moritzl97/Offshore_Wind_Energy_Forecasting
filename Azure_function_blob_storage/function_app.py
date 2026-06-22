@@ -80,7 +80,7 @@ def merge_with_existing(new_df: pd.DataFrame, processed_filename: str, index_col
 @app.blob_trigger(
     arg_name="blob",
     path="raw-knmi/{name}.txt",
-    connection="AzureWebJobsStorage",
+    connection="AzureWebJobsStorage"
 )
 def knmi_blob_trigger(blob: func.InputStream) -> None:
     logging.info(f"KNMI blob trigger fired for: {blob.name}")
@@ -112,7 +112,7 @@ def knmi_blob_trigger(blob: func.InputStream) -> None:
 @app.blob_trigger(
     arg_name="blob",
     path="raw-entsoe/{name}.csv",
-    connection="AzureWebJobsStorage",
+    connection="AzureWebJobsStorage"
 )
 def entsoe_blob_trigger(blob: func.InputStream) -> None:
     logging.info(f"ENTSOE blob trigger fired for: {blob.name}")
@@ -139,7 +139,7 @@ def entsoe_blob_trigger(blob: func.InputStream) -> None:
 @app.blob_trigger(
     arg_name="blob",
     path="raw-kaggle/{name}.csv",
-    connection="AzureWebJobsStorage",
+    connection="AzureWebJobsStorage"
 )
 def kaggle_blob_trigger(blob: func.InputStream) -> None:
     logging.info(f"Kaggle blob trigger fired for: {blob.name}")
@@ -166,8 +166,7 @@ def kaggle_blob_trigger(blob: func.InputStream) -> None:
 @app.blob_trigger(
     arg_name="blob",
     path="raw-offshore/{name}.csv",
-    connection="AzureWebJobsStorage",
-)
+    connection="AzureWebJobsStorage")
 def offshore_blob_trigger(blob: func.InputStream) -> None:
     logging.info(f"Offshore blob trigger fired for: {blob.name}")
     try:

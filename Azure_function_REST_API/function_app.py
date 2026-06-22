@@ -305,12 +305,11 @@ def get_predictions(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="windfarms/{windfarm_name}/metadata", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def get_metadata(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Return the stored metadata for a specific windfarm.
+    Return the stored metadata document for a specific windfarm.
 
-    The Metadata collection holds a single document shaped like
-    {"Metadata": {"<farm_id>": {<per-column stats>}, ...}}. This endpoint
-    fetches that document and hands back the block for the requested windfarm
-    as JSON -- no computation, just whatever is stored.
+    Each windfarm has its own document in the Metadata collection, keyed by
+    _id == farm_id. This endpoint fetches that document directly and returns
+    it as-is.
     """
 
     def body(req):
@@ -319,18 +318,11 @@ def get_metadata(req: func.HttpRequest) -> func.HttpResponse:
             return _error("windfarm name is required", 400)
 
         collection = get_metadata_collection()
-        doc = collection.find_one({}, {"_id": 0})
-        if not doc or "Metadata" not in doc:
-            return _error("No metadata document found", 404)
-
-        farms = doc["Metadata"]
-        if windfarm_name not in farms:
+        doc = collection.find_one({"_id": windfarm_name})
+        if not doc:
             return _error(f"No metadata found for windfarm '{windfarm_name}'", 404)
 
-        return _json({
-            "windfarm": windfarm_name,
-            "metadata": farms[windfarm_name],
-        })
+        return _json(doc)
 
     return _handle(body, req)
 

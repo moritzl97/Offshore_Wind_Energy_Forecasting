@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 import requests
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 
@@ -32,7 +33,7 @@ def get_forecast_data(station):
     Returns parsed data ready for the dashboard template.
     On API failure, returns an error state with empty charts.
     """
-    now = datetime.now().replace(minute=0, second=0, microsecond=0)
+    now = datetime.now(ZoneInfo("Europe/Amsterdam")).replace(minute=0, second=0, microsecond=0, tzinfo=None)
     future_end = now + timedelta(hours=24)
     past_start = now - timedelta(hours=48)  # request up to 48h back as buffer
 

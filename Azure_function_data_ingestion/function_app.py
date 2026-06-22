@@ -14,7 +14,7 @@ from entsoe_web_fetcher import insert_entsoe_offshore_wind_actual
 app = func.FunctionApp()
 
 MONGO_URI = os.environ["MONGO_URI"]
-MONGO_DB = os.environ.get("MONGO_DB", "wind_farm")
+MONGO_DB = os.environ.get("MONGO_DB", "Project3")
 COLLECTION = os.environ.get("MONGO_COLLECTION_TIMESERIES", "Timeseries")
 
 FARMS = {
